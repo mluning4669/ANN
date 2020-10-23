@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+## Problem1— Using ANN for Classifying News Articles
+For this problem, we are going to use reuters dataset. It is a set of short newswires along with their topics
+published by Reuters in 1986. It is a simple, widely used toy dastaset for text classification. You are
+going to use a simple feedforward neural network to classify reuters news into 46 different
+topics/classes.
+The reuters dataset comes packaged as part of Keras . Import the dataset from keras using the following
+commands:
+```{r}
+library(keras)
+reuters = dataset_reuters(num_words=10000)
+```
+
+Take a look at the structure of reuters.dataset. The dataset is already pre-processed and split into train
+and test sets. Each example in the train or test set represents a news article and is stored as a list of
+integers where each integer represents the index of a specific word appearing in that article. When you
+set num_words=1000 in dataset_reuters, then keras keeps only the top 10000 most frequent words in the
+data. Let’s take a look at the structure of the training examples:
+
+```{r}
+str(reuters$train$x)
+```
+
+This means that the first article consists of the words with indices 1,2,2,8,etc.
+As you can see, the examples in the train and test data are vectors of varying lengths. Neural Networks
+requires a matrix where each row represents an example and each column represent an attribute of that
+example. Therefore, to prepare this data for neural networks we need to make sure that all examples
+have the same number of columns ( that is, they are vectors of the same length). To do this, we do one-
+hot encoding of each example to turn them into vectors of 0s and 1s. This would mean for instance,
+turning the sequence [1,2,2,8,....] into a 10000 dimensional vector that would be all zeros except for
+indices 1,2,8, etc. In other words, we turn each news article into a 10000 dimensional binary vector
+which indicates which of the top 10000 frequent words occur in that article. You can use the following
+r function to do this one-hot-encoding:
+
+```{r}
+one_hot_encoding = function(x, dimension=10000) {
+  encoded = matrix(0, length(x), dimension)
+  for (i in 1:length(x))
+  encoded[i, x[[i]]] = 1
+  encoded
+}
+```
+
+Where x is the list of examples for which you want to do one-hot-encoding. Call this function on
+reuters$train$x and reuters$test$x to get the one-hot encoding of the train and test examples. This will
+produce a matrix with dimensions (8982,10000) for the train data and a matrix with dimensions(2246,
+10000) for the test data. You can now use these matrices to train and test your neural network model.
+
+```{r}
+reuters_train = one_hot_encoding(reuters$train$x)
+reuters_test = one_hot_encoding(reuters$test$x)
+```
+
