@@ -56,3 +56,10 @@ reuters_train = one_hot_encoding(reuters$train$x)
 reuters_test = one_hot_encoding(reuters$test$x)
 ```
 
+__Q1. (5 pts)__ Create an ANN model to classify reuters news article into 46 classes (note that
+reuters$train$y and reuters$test$y are vectors of integers between 0-45 representing the category of
+each news article). Use at least two hidden layers and compute the accuracy of your model on the test
+set.
+Unlike the fashion Mnist dataset where each image had to be flattened into a one dimensional vector,
+for the reuters dataset, you do not need the flatten layer before the dense layer as each observation
+(news article) is already one dimensional.
