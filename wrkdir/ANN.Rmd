@@ -47,7 +47,7 @@ one_hot_encoding = function(x, dimension=10000) {
 ```
 
 Where x is the list of examples for which you want to do one-hot-encoding. Call this function on
-reuters$train$x and reuters$test$x to get the one-hot encoding of the train and test examples. This will
+reuters\$train\$x and reuters\$test\$x to get the one-hot encoding of the train and test examples. This will
 produce a matrix with dimensions (8982,10000) for the train data and a matrix with dimensions(2246,
 10000) for the test data. You can now use these matrices to train and test your neural network model.
 
@@ -57,9 +57,31 @@ reuters_test = one_hot_encoding(reuters$test$x)
 ```
 
 __Q1. (5 pts)__ Create an ANN model to classify reuters news article into 46 classes (note that
-reuters$train$y and reuters$test$y are vectors of integers between 0-45 representing the category of
+reuters\$train\$y and reuters\$test\$y are vectors of integers between 0-45 representing the category of
 each news article). Use at least two hidden layers and compute the accuracy of your model on the test
 set.
 Unlike the fashion Mnist dataset where each image had to be flattened into a one dimensional vector,
 for the reuters dataset, you do not need the flatten layer before the dense layer as each observation
 (news article) is already one dimensional.
+```{r}
+reuters$test$y = reuters$test$y - 1
+reuters$train$y = reuters$train$y - 1
+```
+
+```{r}
+model <- keras_model_sequential()
+model %>%
+        layer_dense( units = 50, activation = "relu", input_shape = 10000) %>%
+        layer_dense( units = 50, activation = "relu") %>%
+        layer_dense(units = 46, activation = 'softmax')
+```
+```{r}
+model %>% compile (
+     loss = 'sparse_categorical_crossentropy',
+     optimizer = 'adam',
+     metrics = 'accuracy')
+```
+```{r}
+history = model %>% fit (x = reuters_train, y = reuters$train$y)
+```
+
