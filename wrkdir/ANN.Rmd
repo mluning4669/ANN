@@ -63,15 +63,12 @@ set.
 Unlike the fashion Mnist dataset where each image had to be flattened into a one dimensional vector,
 for the reuters dataset, you do not need the flatten layer before the dense layer as each observation
 (news article) is already one dimensional.
-```{r}
-reuters$test$y = reuters$test$y - 1
-reuters$train$y = reuters$train$y - 1
-```
 
 ```{r}
 model <- keras_model_sequential()
 model %>%
         layer_dense( units = 50, activation = "relu", input_shape = 10000) %>%
+        layer_dense( units = 50, activation = "relu") %>%
         layer_dense( units = 50, activation = "relu") %>%
         layer_dense(units = 46, activation = 'softmax')
 ```
@@ -84,4 +81,30 @@ model %>% compile (
 ```{r}
 history = model %>% fit (x = reuters_train, y = reuters$train$y)
 ```
+```{r}
+score <- model %>% evaluate(reuters_test, reuters$test$y, verbose = 2)
+
+cat('Test accuracy:', score[2], "\n")
+```
+
+__Q2. (5 pts)__ Split the train data into train/validation set. Use the first 1000 examples in reuters$train for
+validation and the rest for training your model. Use “tfruns” package to tune your ANN’s hyperparameters including, the number of nodes in each hidden layer, the activation function in each hidden
+layer, batch_size, learning_rate, and the number of epochs). Validate each model on the validation set.  
+Answer the following questions:  
+      1- Which model ( which hyper-parameter combination) resulted in the best accuracy on the  
+      validation data? Make sure that you print the returned value from tfruns and report the  
+      run with the highest validation accuracy.  
+      2- Print the learning curve of your best model. Does your best model still overfit?  
+      3- Does your validation_loss stop decreasing after several epochs? If so, at roughly which epoch  
+      does your validation_loss stop decreasing?
+
+```{r}
+reuters_validation_x = one_hot_encoding(reuters$train$x[1:1000])
+reuters_train = one_hot_encoding(reuters$train$x[1001:length(reuters$train$x)])
+```
+```{r}
+
+```
+
+
 
