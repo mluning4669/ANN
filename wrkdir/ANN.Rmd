@@ -73,6 +73,7 @@ model %>%
         layer_dense(units = 46, activation = 'softmax')
 ```
 ```{r}
+set.seed(123)
 model %>% compile (
      loss = 'sparse_categorical_crossentropy',
      optimizer = 'adam',
@@ -91,7 +92,7 @@ __Q2. (5 pts)__ Split the train data into train/validation set. Use the first 10
 validation and the rest for training your model. Use “tfruns” package to tune your ANN’s hyperparameters including, the number of nodes in each hidden layer, the activation function in each hidden
 layer, batch_size, learning_rate, and the number of epochs). Validate each model on the validation set.  
 Answer the following questions:  
-      1- Which model ( which hyper-parameter combination) resulted in the best accuracy on the  
+      1- Which model ( which hyper-parameter combination) resulted in the best accuracy on the
       validation data? Make sure that you print the returned value from tfruns and report the  
       run with the highest validation accuracy.  
       2- Print the learning curve of your best model. Does your best model still overfit?  
@@ -100,11 +101,39 @@ Answer the following questions:
 
 ```{r}
 reuters_validation_x = one_hot_encoding(reuters$train$x[1:1000])
+validation_labels = reuters$train$y[1:1000]
+
 reuters_train = one_hot_encoding(reuters$train$x[1001:length(reuters$train$x)])
+reuters_train_labels = reuters$train$y[1001:length(reuters$train$y)]
 ```
 ```{r}
-
+library(tfruns)
 ```
+```{r}
+runs <- tuning_run("reuters.R",
+                   flags = list (
+                     nodes = c(64, 128, 392),
+                     learning_rate = c(0.01, 0.05, 0.001, 0.0001),
+                     batch_size = c(100, 200, 500, 1000),
+                     epochs = c(30,50,100),
+                     activation = c("relu","sigmoid","tanh")
+                   ), sample = 0.02)
+```
+```{r}
+runs
+```
+1. The model with the best validation accuracy was the model from the first run
+2. see attached for plot of best training run
+3. the validation error stops decreasing after the 13th epoch
+
+__Q3. (5 pts)__ Now use ALL the training data in reuters$train (i.e., train + validation data) to train an
+ANN with the best hyper- parameter combination you found after tuning in the previous question.
+Compute the accuracy of this model on the test set.
+
+
+
+
+
 
 
 
