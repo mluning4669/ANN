@@ -130,9 +130,36 @@ __Q3. (5 pts)__ Now use ALL the training data in reuters$train (i.e., train + va
 ANN with the best hyper- parameter combination you found after tuning in the previous question.
 Compute the accuracy of this model on the test set.
 
+```{r}
+reuters_train = one_hot_encoding(reuters$train$x)
+reuters_test = one_hot_encoding(reuters$test$x)
+```
 
+```{r}
+model <- keras_model_sequential()
+model %>%
+        layer_dense( units = 128, activation = "tanh", input_shape = 10000) %>%
+        layer_dense( units = 128, activation = "tanh") %>%
+        layer_dense( units = 128, activation = "tanh") %>%
+        layer_dense(units = 46, activation = 'softmax')
+```
 
+```{r}
+set.seed(123)
+model %>% compile (
+        loss = 'sparse_categorical_crossentropy',
+        optimizer = optimizer_adam(lr=0.0001),
+        metrics = 'accuracy')
 
+model %>% fit (x = reuters_train, y = reuters$train$y, epochs = 30, batch_size = 100)
+```
+
+```{r}
+history = model %>% fit (x = reuters_train, y = reuters$train$y)
+```
+```{r}
+history
+```
 
 
 
