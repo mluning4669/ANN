@@ -266,23 +266,29 @@ __dummy variables you created in step 6.__ You can append the categorical variab
 numeric variables.
 
 ```{r}
-hitters_scale_train = scale(hitters_train[-c(14,15,20)])
+hitters_scale_train = scale(hitters_train[-c(14,15,20,19)])
 
 hitters_mean_train = attr(hitters_scale_train, "scaled:center")
 hitters_stddevs_train = attr(hitters_scale_train, "scaled:scale")
 
 hitters_scale_train = as.data.frame(hitters_scale_train)
+hitters_train_labels = hitters_train[,19]
+hitters_scale_train$Salary = NULL
 
 hitters_scale_train$League = hitters_train[,14]
 hitters_scale_train$Division = hitters_train[,15]
 hitters_scale_train$NewLeague = hitters_train[,20]
 
-hitters_scale_val = as.data.frame(scale(hitters_val[-c(14,15,20)], center = hitters_mean_train, scale = hitters_stddevs_train))
+hitters_scale_val = as.data.frame(scale(hitters_val[-c(14,15,20,19)], center = hitters_mean_train, scale = hitters_stddevs_train))
+hitters_val_labels = hitters_val[,19]
+hitters_scale_val$Salary = NULL
 hitters_scale_val$League = hitters_val[,14]
 hitters_scale_val$Division = hitters_val[,15]
 hitters_scale_val$NewLeague = hitters_val[,20]
 
-hitters_scale_test = as.data.frame(scale(hitters_test[-c(14,15,20)], center = hitters_mean_train, scale = hitters_stddevs_train))
+hitters_scale_test = as.data.frame(scale(hitters_test[-c(14,15,20,19)], center = hitters_mean_train, scale = hitters_stddevs_train))
+hitters_test_labels = hitters_test[,19]
+hitters_scale_test$Salary = NULL
 hitters_scale_test$League = hitters_test[,14]
 hitters_scale_test$Division = hitters_test[,15]
 hitters_scale_test$NewLeague = hitters_test[,20]
@@ -292,8 +298,40 @@ hitters_scale_test$NewLeague = hitters_test[,20]
 layers. Use tfruns to tune your model’s hyper-parameters including, the number of nodes in each
 hidden layer, the activation function in each hidden layer, batch_size, learning_rate, and the number of
 epochs). Validate each model on the validation set. Answer the following questions:
+
+```{r}
+library(tfruns)
+```
+```{r}
+runs <- tuning_run("hitters.R",
+                   flags = list (
+                     nodes = c(64, 128, 392),
+                     learning_rate = c(0.01, 0.05, 0.001, 0.0001),
+                     batch_size = c(100, 200, 500, 1000),
+                     epochs = c(30, 50, 100),
+                     activation = c("relu","sigmoid","tanh")
+                   ), sample = 0.02)
+```
+
+```{r}
+runs
+```
 • Print the returned value from tf_runs to see the metrics for each run. Which run ( which
 hyper-parameter combination) gave the best mean squared error on the validation data?
+
+The combination from the third run
+
 • Print the learning curve for your best model. Does your best model still overfit?
+
+Yes, the validation loss is less than the metric loss
+
 • Does your validation_loss stop decreasing after several epochs? If so, at roughly which epoch
 does your validation_loss stop decreasing?
+
+Yes, it stops decreasing at the 94th epoch.
+
+10. (5 pt) Measure the performance of your best model (after tuning) on the test set and
+compute its RMSE. Note that you must reverse the log transformation by
+taking the exp (exponent) of the predictions returned by the neural network
+model and compare it to the original salary value ( without log
+transformation). Doing this, helps us get the RMSE in the original scale.
