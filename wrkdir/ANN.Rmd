@@ -162,5 +162,138 @@ history
 ```
 
 
+## Problem2——Predicting Baseball players’ salaries
 
+1. (1p) Download the dataset hitters.csv and explore the overall structure of the dataset using the
+str() function. Get a summary statistics of each variable. Answer the following questions:
+a) How many observations do you have in the data?
+b) How many categorical and numeric variables you have in your data?
+c) Is there any missing value?
+d) Draw the histogram of salary. Interpret what you see in the histogram.
 
+```{r}
+hitters = read.csv("hitters.csv")
+```
+```{r}
+str(hitters)
+summary(hitters)
+```
+
+a) There are 322 observations
+b) There are 3 categorical variables and 17 numeric variables
+c) There are 59 missing values in salary
+d) The histogram is skewed right and the mean is around 500
+```{r}
+hist(hitters$Salary)
+```
+
+2. (1p) remove the observation for which Salary value is missing
+```{r}
+hitters_clean = hitters[!is.na(hitters$Salary),]
+```
+
+3. (2 pt) Which predictors have most correlation with Salary? Use scattered plot, side-by-side box
+plots, t-test and correlation matrix to answer this question.
+
+```{r}
+plot(hitters_clean[ , c(19, 1:4)])
+plot(hitters_clean[ , c(19, 5:9)])
+plot(hitters_clean[ , c(19, 10:13)])
+plot(hitters_clean[ , c(19, 16:18)])
+```
+```{r}
+boxplot(Salary~League,data = hitters_clean)
+boxplot(Salary~Division,data = hitters_clean)
+boxplot(Salary~NewLeague,data = hitters_clean)
+```
+
+```{r}
+t.test(Salary~League, data = hitters_clean)
+t.test(Salary~Division,data = hitters_clean)
+t.test(Salary~NewLeague,data = hitters_clean)
+```
+
+```{r}
+cor(hitters_clean$Salary, y=hitters_clean[-c(19, 15, 14, 20)])
+```
+
+CAtBat, CHits, CHmRun, CRuns, and CRBI have correlations greater than .5
+
+4. Use set.seed(1) to set the random seed so I can reproduce your results.
+```{r}
+set.seed(1)
+```
+
+5. Use Caret’s “createDataPartition” method as follows to partition the dataset into
+hitters_train, and hitters_test (use 90% for training and 10% for testing)
+
+```{r}
+inTrain = createDataPartition(hitters_clean$Salary, p=0.9, list=FALSE)
+hitters_train = hitters_clean[inTrain,]
+hitters_test = hitters_clean[-inTrain,]
+```
+
+6. (1pt) Neural networks do not accept categorical variables and we must encode the categorical
+variables before training the network. All the categorical variables in this dataset are binary ( i.e.,
+have two levels) so you can encode them by simply using iflese function to convert each to a
+numeric variable with two values 0 and 1.
+
+```{r}
+hitters_train$NewLeague = ifelse(hitters_train$NewLeague == "N", 1, 0)
+hitters_train$Division = ifelse(hitters_train$Division == "W", 1, 0)
+hitters_train$League = ifelse(hitters_train$League == "N", 1, 0)
+```
+
+7. (1pt)Replace the salary column with log(salary) where log is the logarithm function. This will be
+the attribute we want to predict. 
+```{r}
+hitters_train$Salary = log(hitters_train$Salary)
+```
+
+8. (1pt) Set.seed(1) and further divide the hitters_train data into 90% training and 10% validation
+using Caret’s “CreateDataPartition” function
+
+```{r}
+toTrain = createDataPartition(hitters_train$Salary, p=0.9, list=FALSE)
+hitters_train = hitters_train[toTrain , ]
+hitters_val = hitters_train[-toTrain , ]
+```
+
+9. ( 3 pt) Scale the numeric attributes in the training data (except for the outcome variable, Salary).
+Use the column means and column standard deviations from the training data to scale both the
+validation and test data (please refer to slide 81, lecture 9). Note: __You should not scale the__
+__dummy variables you created in step 6.__ You can append the categorical variables to your scaled
+numeric variables.
+
+```{r}
+hitters_scale_train = scale(hitters_train[-c(14,15,20)])
+
+hitters_mean_train = attr(hitters_scale_train, "scaled:center")
+hitters_stddevs_train = attr(hitters_scale_train, "scaled:scale")
+
+hitters_scale_train = as.data.frame(hitters_scale_train)
+
+hitters_scale_train$League = hitters_train[,14]
+hitters_scale_train$Division = hitters_train[,15]
+hitters_scale_train$NewLeague = hitters_train[,20]
+
+hitters_scale_val = as.data.frame(scale(hitters_val[-c(14,15,20)], center = hitters_mean_train, scale = hitters_stddevs_train))
+hitters_scale_val$League = hitters_val[,14]
+hitters_scale_val$Division = hitters_val[,15]
+hitters_scale_val$NewLeague = hitters_val[,20]
+
+hitters_scale_test = as.data.frame(scale(hitters_test[-c(14,15,20)], center = hitters_mean_train, scale = hitters_stddevs_train))
+hitters_scale_test$League = hitters_test[,14]
+hitters_scale_test$Division = hitters_test[,15]
+hitters_scale_test$NewLeague = hitters_test[,20]
+```
+
+9 cont. (5 pt) Create an ANN model to predict log(salary) from other attributes. Use at least two hidden
+layers. Use tfruns to tune your model’s hyper-parameters including, the number of nodes in each
+hidden layer, the activation function in each hidden layer, batch_size, learning_rate, and the number of
+epochs). Validate each model on the validation set. Answer the following questions:
+• Print the returned value from tf_runs to see the metrics for each run. Which run ( which
+hyper-parameter combination) gave the best mean squared error on the validation data?
+• Print the learning curve for your best model. Does your best model still overfit?
+• Does your validation_loss stop decreasing after several epochs? If so, at roughly which epoch
+does your validation_loss stop decreasing?
