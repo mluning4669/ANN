@@ -363,3 +363,27 @@ rmse = function(x,y) {
 rmse(exp(predictions), hitters_test_labels)
 ```
 
+11. (5 pt) Use a simple ( or step wise) linear regression model to predict the salary. Train and test
+your model on the same data you used to train and test your best neural network model.
+Compare the RMSE of the linear model on the test data with the RMSE of the neural network
+model. How does your neural network model compare to a simple linear model?
+
+```{r}
+hitters_scale_train$Salary = hitters_train_labels
+hitters_scale_val$Salary = hitters_val_labels
+hitters_scale_test$Salary = hitters_test_labels
+
+regression_df = rbind(hitters_scale_train, hitters_scale_val, hitters_scale_test)
+
+library(leaps)
+library(caret)
+```
+```{r}
+train.control = trainControl(method = "cv", number = 10)
+step.model = train(Salary ~ ., data = regression_df, method = "leapForward", trControl = train.control)
+```
+```{r}
+step.model
+```
+
+The neural network model did considerably worse than the stepwise linear regression model.
