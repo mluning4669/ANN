@@ -155,12 +155,8 @@ model %>% fit (x = reuters_train, y = reuters$train$y, epochs = 30, batch_size =
 ```
 
 ```{r}
-history = model %>% fit (x = reuters_train, y = reuters$train$y)
+model %>% evaluate(x = reuters_test, y = reuters$test$y)
 ```
-```{r}
-history
-```
-
 
 ## Problem2——Predicting Baseball players’ salaries
 
@@ -292,6 +288,10 @@ hitters_scale_test$Salary = NULL
 hitters_scale_test$League = hitters_test[,14]
 hitters_scale_test$Division = hitters_test[,15]
 hitters_scale_test$NewLeague = hitters_test[,20]
+
+hitters_scale_test$NewLeague = ifelse(hitters_scale_test$NewLeague == "N", 1, 0)
+hitters_scale_test$Division = ifelse(hitters_scale_test$Division == "W", 1, 0)
+hitters_scale_test$League = ifelse(hitters_scale_test$League == "N", 1, 0)
 ```
 
 9 cont. (5 pt) Create an ANN model to predict log(salary) from other attributes. Use at least two hidden
@@ -335,3 +335,31 @@ compute its RMSE. Note that you must reverse the log transformation by
 taking the exp (exponent) of the predictions returned by the neural network
 model and compare it to the original salary value ( without log
 transformation). Doing this, helps us get the RMSE in the original scale.
+
+```{r}
+model <- keras_model_sequential()
+model %>%
+        layer_dense( units = 392, activation = "sigmoid", input_shape = dim(hitters_scale_train)[2]) %>%
+        layer_dense( units = 392, activation = "sigmoid") %>%
+        layer_dense( units = 392, activation = "sigmoid") %>%
+        layer_dense( units = 1)
+
+set.seed(1)
+model %>% compile (
+        loss = 'mse',
+        optimizer = optimizer_sgd(0.05))
+
+model %>% fit (x = as.matrix(hitters_scale_train), y = hitters_train_labels, epochs = 100, batch_size = 500, validation_data = list(as.matrix(hitters_scale_val), hitters_val_labels))
+```
+
+```{r}
+predictions = model %>% predict(as.matrix(hitters_scale_test))
+rmse = function(x,y) {
+  return (mean((x-y)^2)^0.5)
+}
+```
+
+```{r}
+rmse(exp(predictions), hitters_test_labels)
+```
+
